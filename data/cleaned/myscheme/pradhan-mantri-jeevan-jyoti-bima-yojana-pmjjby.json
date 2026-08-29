@@ -1,0 +1,10 @@
+{
+    "name": "Pradhan Mantri Jeevan Jyoti Bima Yojana (PMJJBY)",
+    "description": "Pradhan Mantri Jeevan Jyoti Bima Yojana is a one-year life insurance scheme, renewable from year to year, offering life insurance cover for death due to any reason. The life cover of Rs. 2 Lakh is available at a premium of Rs. 436 per annum, which is auto-debited from the subscriber's bank account.",
+    "eligibility": "1. All individual bank account holders. 2. Age between 18 and 50 years. 3. Consent to enable auto-debit of premium. 4. Lien period of 30 days is applicable from the date of enrollment (no claim allowed for first 30 days except accidental death).",
+    "documents": "1. Aadhaar Card 2. Savings Bank Account details 3. Active Mobile Number 4. Consent Form",
+    "steps": "1. Go to the bank branch or post office holding your active savings account, or log in to their Net Banking interface. 2. Search for the PMJJBY enrollment section or ask for the physical enrollment form. 3. Provide your Aadhaar number, nominee details, and self-attested health declaration. 4. Authorize the bank to auto-debit the annual premium of Rs. 436 from your account. 5. Submit the form to activate your life insurance coverage (note: a 30-day lien period applies for non-accidental claims).",
+    "application_url": "https://www.myscheme.gov.in/schemes/pmjjby",
+    "source_url": "https://www.myscheme.gov.in/schemes/pmjjby",
+    "cleaned_at": "2026-07-21T17:41:43.309604+00:00"
+}

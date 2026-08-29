@@ -1,0 +1,51 @@
+name: Weekly Crawler
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"  # Every Sunday midnight UTC
+  workflow_dispatch:      # Allow manual trigger from GitHub UI
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+          cache: "pip"
+          
+      - name: Install Dependencies
+        run: |
+          pip install -r backend/requirements.txt
+          
+      - name: Run All Crawlers
+        run: |
+          # Runs all crawlers, falling back to mock snapshots if gov portal blocks
+          python crawler/run_all.py
+          
+      - name: Parse and Chunk Scheme Data
+        run: |
+          python scripts/parse_and_chunk.py
+          
+      - name: Build FAISS Vector Index
+        run: |
+          python scripts/embed_and_index.py
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          
+      - name: Commit and Push Index Changes
+        run: |
+          git config user.email "action@github.com"
+          git config user.name "GitHub Action"
+          git add data/vectordb/ data/cleaned/ data/chunks/ data/crawl_log.json
+          # Check if there are changes before committing to prevent action failures
+          if ! git diff-index --quiet HEAD; then
+            git commit -m "Weekly index and crawl data update [skip ci]"
+            git push
+          else
+            echo "No changes in index data."
+          fi

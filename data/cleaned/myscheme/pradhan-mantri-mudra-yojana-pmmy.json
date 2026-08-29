@@ -1,0 +1,10 @@
+{
+    "name": "Pradhan Mantri Mudra Yojana (PMMY)",
+    "description": "Pradhan Mantri MUDRA Yojana (PMMY) is a scheme launched by the Hon’ble Prime Minister for providing loans up to 10 Lakh to the non-corporate, non-farm small/micro enterprises. These loans are classified as MUDRA loans under PMMY. These loans are given by Commercial Banks, RRBs, Small Finance Banks, MFIs and NBFCs.",
+    "eligibility": "1. Any Indian citizen who has a business plan for a non-farm sector income generating activity. 2. The business could be proprietorship, partnership firm, small manufacturing unit, service sector unit, shopkeeper, fruit/vegetable vendor, truck operator, agriculture-allied activities. 3. Shishu: Loans up to Rs. 50,000. 4. Kishore: Loans above Rs. 50,000 and up to Rs. 5 Lakh. 5. Tarun: Loans above Rs. 5 Lakh and up to Rs. 10 Lakh.",
+    "documents": "1. Mudra Application Form 2. Proof of Identity (Aadhaar/Voter ID/PAN/Passport) 3. Proof of Residence 4. Quotation of machinery/items to be purchased 5. Proof of identity/address of the business enterprise 6. Category certificate (SC/ST/OBC/Minority, if applicable)",
+    "steps": "1. Download the Mudra loan application form (Shishu, Kishore, or Tarun) from the official Mudra website or get it from your local bank branch. 2. Fill in the business plan details, capital requirements, and personal identification info. 3. Attach the required documents (ID proof, address proof, business license, and vendor quotations for equipment). 4. Submit the completed application form to a participating bank, RRB, NBFC, or Microfinance Institution. 5. The bank will review your credit history and business viability. Once approved, the loan amount will be disbursed.",
+    "application_url": "https://www.myscheme.gov.in/schemes/pmmy",
+    "source_url": "https://www.myscheme.gov.in/schemes/pmmy",
+    "cleaned_at": "2026-07-21T17:41:43.310649+00:00"
+}

@@ -1,0 +1,10 @@
+{
+    "name": "Atal Pension Yojana (APY)",
+    "description": "Atal Pension Yojana (APY) is a government-backed pension scheme in India, primarily targeted at the unorganised sector. Under the APY, a guaranteed minimum pension of Rs. 1,000, Rs. 2,000, Rs. 3,000, Rs. 4,000 or Rs. 5,000 per month will be given at the age of 60 years depending on the contributions by the subscribers.",
+    "eligibility": "Age of joining and contribution period: 1. The minimum age of joining APY is 18 years and maximum is 40 years. 2. The age of exit and start of pension is 60 years. 3. Subscriber contribution to APY shall be made through the facility of 'auto-debit' of the prescribed contribution amount from the savings bank account of the subscriber on monthly, quarterly or half-yearly basis. 4. The subscribers are required to contribute the prescribed contribution amount from the age of joining APY till the age of 60 years. Exclusions: From 1st October, 2022, any citizen who is or has been an income tax payer, shall not be eligible to join APY.",
+    "documents": "1. Aadhaar Card (primary KYC) 2. Savings Bank Account Number 3. Mobile Number linked to bank account 4. APY Application Form (physical or online net-banking registration)",
+    "steps": "1. Visit the nearest participating bank branch where you hold a savings account, or log in to your bank's Net Banking / Mobile Banking portal. 2. Request the APY registration form or select the 'Atal Pension Yojana' option online. 3. Enter your savings bank account number and primary Aadhaar card KYC details. 4. Choose your desired monthly pension amount (from Rs. 1,000 to Rs. 5,000). 5. Fill in the nominee information and authorization details. 6. Select auto-debit consent so premium contributions are deducted periodically from your bank account.",
+    "application_url": "https://www.myscheme.gov.in/schemes/apy",
+    "source_url": "https://www.myscheme.gov.in/schemes/apy",
+    "cleaned_at": "2026-07-21T17:41:43.305547+00:00"
+}

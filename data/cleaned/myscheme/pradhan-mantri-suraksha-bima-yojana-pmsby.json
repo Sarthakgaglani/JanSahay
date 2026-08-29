@@ -1,0 +1,10 @@
+{
+    "name": "Pradhan Mantri Suraksha Bima Yojana (PMSBY)",
+    "description": "Pradhan Mantri Suraksha Bima Yojana is an accident insurance scheme that offers one-year accidental death and disability cover, renewable from year to year. The coverage is Rs. 2 Lakh for accidental death and full disability, and Rs. 1 Lakh for partial disability. The premium is Rs. 20 per annum, which is auto-debited from the subscriber's bank account.",
+    "eligibility": "1. All individual bank account holders. 2. Age between 18 and 70 years. 3. Consent to join and enable auto-debit of premium. 4. Account holders of participating banks are eligible.",
+    "documents": "1. Aadhaar Card 2. Bank Account Details (for auto-debit) 3. Consent cum Declaration Form 4. Mobile Number",
+    "steps": "1. Contact the bank or post office where your savings bank account is maintained. 2. Request the PMSBY application cum auto-debit consent form, or log in to your Net Banking portal. 3. Fill in your name, Aadhaar card number, nominee details, and select your savings account. 4. Tick the auto-debit consent box to allow the annual premium deduction of Rs. 20. 5. Submit the form online or hand it to the bank teller to activate your accidental insurance coverage.",
+    "application_url": "https://www.myscheme.gov.in/schemes/pmsby",
+    "source_url": "https://www.myscheme.gov.in/schemes/pmsby",
+    "cleaned_at": "2026-07-21T17:41:43.311614+00:00"
+}

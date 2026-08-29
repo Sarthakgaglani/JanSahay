@@ -1,0 +1,10 @@
+{
+    "name": "Pradhan Mantri Awas Yojana (Gramin)",
+    "description": "Pradhan Mantri Awas Yojana (Gramin) aims to provide a pucca house, with basic amenities, to all houseless householder and those households living in dilapidated and kutcha houses, by 2025. The minimum size of the house is to be 25 sq.mt (from 20 sq.mt) with a hygienic cooking space. The financial assistance is shared between Centre and State.",
+    "eligibility": "1. Houseless families. 2. Families living in houses with zero, one, or two rooms with kutcha walls and kutcha roof. 3. Households without a male member between ages 16 and 59. 4. Households with no literate adult above 25 years. 5. Landless households deriving income from manual casual labour.",
+    "documents": "1. Aadhaar Card 2. Bank Account Details (linked to Aadhaar) 3. Swachh Bharat Mission (SBM) registration number 4. Job card number (as registered under MGNREGA) 5. Consent document to use Aadhaar on behalf of the beneficiary",
+    "steps": "1. Since registration is done locally based on SECC 2011 data, contact your local Gram Panchayat or Ward Office. 2. Alternatively, visit the PMAY-G portal (https://pmayg.nic.in/) to check if your name is in the beneficiary list. 3. Provide your Aadhaar card, bank account, and MGNREGA Job Card details to the Panchayat Officer. 4. The officer will register your details on the 'AwaasSoft' portal and capture a geo-tagged photograph of your current kutcha house. 5. Once approved, the funds will be transferred directly to your bank account in multiple installments to construct the house.",
+    "application_url": "https://www.myscheme.gov.in/schemes/pmayg",
+    "source_url": "https://www.myscheme.gov.in/schemes/pmayg",
+    "cleaned_at": "2026-07-21T17:41:43.306978+00:00"
+}

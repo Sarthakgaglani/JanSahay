@@ -1,0 +1,10 @@
+{
+    "name": "Ayushman Bharat Pradhan Mantri Jan Arogya Yojana (AB-PMJAY)",
+    "description": "AB-PMJAY is the largest health assurance scheme in the world which aims to provide a health cover of Rs. 5 lakhs per family per year for secondary and tertiary care hospitalization to over 12 crores poor and vulnerable families (approximately 55 crore beneficiaries) that form the bottom 40% of the Indian population. The scheme offers cashless and paperless access to services for the beneficiary at the point of service in any empanelled public and private hospitals.",
+    "eligibility": "1. Families listed under the Socio-Economic Caste Census (SECC) 2011 database. 2. Rural families meeting criteria like: households living in one-room kutcha houses, households with no adult member between 16-59 years, female-headed households with no adult male, SC/ST households, landless households deriving major income from manual labor. 3. Urban occupational categories: Ragpickers, beggars, domestic workers, street vendors, construction workers, plumbers, masons, painters, welders, sweepers, transport workers, shop workers, etc.",
+    "documents": "1. Aadhaar Card 2. Ration Card (mandatory for family verification) 3. PMJAY Letter or PMJAY ID number (if already registered) 4. Mobile Number 5. Government-issued photo ID",
+    "steps": "1. Visit the official PM-JAY website (https://pmjay.gov.in/) and click 'Am I Eligible' to check if your family is covered. 2. Alternatively, go to the nearest Ayushman Kiosk at a government hospital or Common Service Centre (CSC). 3. Present your Aadhaar Card, Ration Card, or PM-JAY letter to the Ayushman Mitra (kiosk executive). 4. The executive will perform biometric fingerprint authentication to verify your family identity. 5. Once verified, they will issue your e-Ayushman Card (Golden Card) to avail free cashless healthcare up to Rs. 5 Lakh.",
+    "application_url": "https://dashboard.pmjay.gov.in/pmj/#/",
+    "source_url": "https://pmjay.gov.in/",
+    "cleaned_at": "2026-07-21T17:41:43.312999+00:00"
+}

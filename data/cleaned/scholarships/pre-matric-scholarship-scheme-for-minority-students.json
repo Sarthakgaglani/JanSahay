@@ -1,0 +1,10 @@
+{
+    "name": "Pre Matric Scholarship Scheme for Minority Students",
+    "description": "The Pre Matric Scholarship for Minorities provides financial assistance to students belonging to minority communities (Muslims, Sikhs, Christians, Buddhists, Jains, and Zoroastrians/Parsis) studying in classes 1 to 10. The scholarship aims to encourage parents to send their children to school and prevent dropouts.",
+    "eligibility": "1. Must belong to one of the notified minority communities. 2. Must be studying in class 1 to 10 in a government/recognized private school. 3. Must have secured not less than 50% marks in the previous final examination (not applicable to class 1). 4. Annual income of parents from all sources must not exceed Rs. 1 Lakh.",
+    "documents": "1. Student Photograph 2. Self-declaration of minority community by parent/guardian 3. Income Certificate of parent/guardian 4. Marksheet of previous final exam 5. Fee receipt of current school year 6. Bank account details of student or parent",
+    "steps": "1. Register as a new user on the National Scholarship Portal (NSP) at https://scholarships.gov.in/. 2. Log in using the student ID and password sent to your mobile. 3. Choose 'Pre-Matric Scholarship Scheme for Minorities' from the list of available schemes. 4. Enter student academic details, family income, and community self-declaration. 5. Upload required documents: student photograph, parent income certificate, and community certificate. 6. Submit the application. Your school authority will verify the records online to release the scholarship benefits.",
+    "application_url": "https://scholarships.gov.in/",
+    "source_url": "https://scholarships.gov.in/",
+    "cleaned_at": "2026-07-21T17:41:43.317891+00:00"
+}
