@@ -10,10 +10,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend source
-COPY . .
+COPY . /app/
+COPY . /app/backend/
+
+ENV PYTHONPATH=/app
 
 # Create data directory
-RUN mkdir -p /app/data/vectordb /app/data/cleaned /app/data/chunks
+RUN mkdir -p /app/data/vectordb /app/data/cleaned /app/data/chunks /app/backend/data
 
 # Expose port
 EXPOSE 8000

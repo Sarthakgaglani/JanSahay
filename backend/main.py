@@ -8,15 +8,28 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-# Ensure the parent directory is in python path to allow importing backend.*
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Ensure parent directory and current directory are in sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 
-from backend.routes import router
-from backend.auth_routes import router as auth_router
-from backend.application_routes import router as applications_router
-from backend.rag import init_rag_system
-from backend.database import get_connection, init_db
-from backend.llm import get_llm_provider
+try:
+    from backend.routes import router
+    from backend.auth_routes import router as auth_router
+    from backend.application_routes import router as applications_router
+    from backend.rag import init_rag_system
+    from backend.database import get_connection, init_db
+    from backend.llm import get_llm_provider
+except ModuleNotFoundError:
+    from routes import router
+    from auth_routes import router as auth_router
+    from application_routes import router as applications_router
+    from rag import init_rag_system
+    from database import get_connection, init_db
+    from llm import get_llm_provider
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logger = logging.getLogger("jansahay.api")
