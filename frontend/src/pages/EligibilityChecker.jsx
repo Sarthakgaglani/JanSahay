@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { checkEligibility } from '../api';
 
@@ -13,25 +14,23 @@ const STATES = [
 const STEPS = [
   { id: 1, title: 'Your Age', icon: '🎂' },
   { id: 2, title: 'Gender', icon: '👤' },
-  { id: 3, title: 'State', icon: '🗺️' },
+  { id: 3, title: 'State', icon: '📍' },
   { id: 4, title: 'Occupation', icon: '💼' },
   { id: 5, title: 'Annual Income', icon: '💰' },
-  { id: 6, title: 'Category', icon: '📋' },
+  { id: 6, title: 'Caste Category', icon: '🏛️' },
 ];
 
 const CONFIDENCE_STYLE = {
-  high: 'bg-green-50 border-green-200 text-green-800 dark:bg-green-950/30 dark:border-green-700 dark:text-green-300',
-  medium: 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950/30 dark:border-amber-700 dark:text-amber-300',
-  low: 'bg-gray-50 border-gray-200 text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300',
+  high: 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200',
+  medium: 'border-indigo-400 bg-indigo-50/40 dark:bg-indigo-950/20 text-indigo-900 dark:text-indigo-200',
+  low: 'border-amber-400 bg-amber-50/40 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200',
 };
 
 const PORTAL_BADGE = {
-  pmkisan: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-  pmjay: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  scholarships: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  eshram: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-  pmjdy: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  myscheme: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
+  myscheme: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300',
+  pmkisan: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+  pmjay: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+  scholarships: 'bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300',
 };
 
 export default function EligibilityChecker() {
@@ -52,7 +51,8 @@ export default function EligibilityChecker() {
     const current = STEPS[step - 1];
     const fieldMap = { 1: 'age', 2: 'gender', 3: 'state', 4: 'occupation', 5: 'annual_income', 6: 'caste_category' };
     const field = fieldMap[step];
-    if (!form[field]) {
+    const val = String(form[field] ?? '').trim();
+    if (!val) {
       setError(`Please fill in your ${current.title.toLowerCase()} before continuing.`);
       return;
     }
@@ -60,6 +60,18 @@ export default function EligibilityChecker() {
     if (step < 6) setStep(s => s + 1);
     else handleSubmit();
   };
+
+  useEffect(() => {
+    if (result) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' && !loading) {
+        e.preventDefault();
+        handleNext();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [step, form, result, loading]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -76,7 +88,8 @@ export default function EligibilityChecker() {
       const data = await checkEligibility(payload);
       setResult(data);
     } catch (err) {
-      setError('Failed to check eligibility. Please try again.');
+      const msg = err.response?.data?.detail || err.message || 'Failed to check eligibility. Please try again.';
+      setError(typeof msg === 'string' ? msg : 'Failed to check eligibility. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -111,7 +124,13 @@ export default function EligibilityChecker() {
         </div>
 
         {!result ? (
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleNext();
+            }}
+            className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden"
+          >
             {/* Progress bar */}
             <div className="h-1.5 bg-gray-100 dark:bg-gray-700">
               <div
@@ -161,7 +180,7 @@ export default function EligibilityChecker() {
               {step === 2 && (
                 <div className="grid grid-cols-3 gap-4">
                   {[{ v: 'male', label: 'Male', icon: '👨' }, { v: 'female', label: 'Female', icon: '👩' }, { v: 'other', label: 'Other', icon: '🧑' }].map(opt => (
-                    <button key={opt.v} onClick={() => setForm(f => ({ ...f, gender: opt.v }))}
+                    <button type="button" key={opt.v} onClick={() => setForm(f => ({ ...f, gender: opt.v }))}
                       className={`flex flex-col items-center py-6 rounded-2xl border-2 transition-all font-semibold ${
                         form.gender === opt.v
                           ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
@@ -197,7 +216,7 @@ export default function EligibilityChecker() {
                     { v: 'salaried', label: 'Salaried Employee', icon: '💼' },
                     { v: 'self_employed', label: 'Self Employed', icon: '🏪' },
                   ].map(opt => (
-                    <button key={opt.v} onClick={() => setForm(f => ({ ...f, occupation: opt.v }))}
+                    <button type="button" key={opt.v} onClick={() => setForm(f => ({ ...f, occupation: opt.v }))}
                       className={`flex items-center gap-3 p-4 rounded-xl border-2 transition-all font-medium text-left ${
                         form.occupation === opt.v
                           ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
@@ -228,7 +247,7 @@ export default function EligibilityChecker() {
                       { label: '₹2.5–5 Lakh', val: '375000' },
                       { label: 'Above ₹5 Lakh', val: '600000' },
                     ].map(opt => (
-                      <button key={opt.val} onClick={() => setForm(f => ({ ...f, annual_income: opt.val }))}
+                      <button type="button" key={opt.val} onClick={() => setForm(f => ({ ...f, annual_income: opt.val }))}
                         className={`py-2 px-3 rounded-xl border transition-all ${
                           form.annual_income === opt.val
                             ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
@@ -251,7 +270,7 @@ export default function EligibilityChecker() {
                     { v: 'st', label: 'ST', desc: 'Scheduled Tribe' },
                     { v: 'ews', label: 'EWS', desc: 'Economically Weaker Section' },
                   ].map(opt => (
-                    <button key={opt.v} onClick={() => setForm(f => ({ ...f, caste_category: opt.v }))}
+                    <button type="button" key={opt.v} onClick={() => setForm(f => ({ ...f, caste_category: opt.v }))}
                       className={`flex flex-col p-4 rounded-xl border-2 transition-all text-left ${
                         form.caste_category === opt.v
                           ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300'
@@ -294,7 +313,7 @@ export default function EligibilityChecker() {
                 </button>
               </div>
             </div>
-          </div>
+          </form>
         ) : (
           /* Results */
           <div>
@@ -351,7 +370,13 @@ export default function EligibilityChecker() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-3 mt-4 flex-wrap">
+                    <div className="flex gap-3 mt-4 flex-wrap items-center">
+                      <Link
+                        to="/applications"
+                        className="text-xs font-bold px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors shadow-sm"
+                      >
+                        Start Demo Application 📋
+                      </Link>
                       {scheme.source_url && (
                         <a href={scheme.source_url} target="_blank" rel="noopener noreferrer"
                           className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-current hover:opacity-80 transition-opacity">

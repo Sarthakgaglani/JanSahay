@@ -2,8 +2,10 @@ import os
 import json
 import re
 import math
+import asyncio
 from datetime import datetime
 from dotenv import load_dotenv
+from backend.llm import LLMProviderError, get_llm_provider
 
 # Load environment variables using absolute path
 backend_dir = os.path.dirname(os.path.abspath(__file__))
@@ -29,24 +31,9 @@ except ImportError:
     HAS_TRANSLATOR = False
     print("deep-translator not installed. Translation features will be mocked.")
 
-# Initialize Gemini Client
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-USE_MOCK_LLM = False
-
-if not GEMINI_API_KEY or GEMINI_API_KEY == "your_gemini_api_key_here":
-    print("Warning: GEMINI_API_KEY not set or invalid. Running in MOCK LLM mode.")
-    USE_MOCK_LLM = True
-else:
-    try:
-        from google import genai as _genai_check
-        USE_MOCK_LLM = False
-    except ImportError:
-        try:
-            import google.generativeai as _genai_old_check
-            USE_MOCK_LLM = False
-        except ImportError:
-            print("Warning: google-genai package not installed. Running in MOCK LLM mode.")
-            USE_MOCK_LLM = True
+# The provider is intentionally configured only through environment variables.
+LLM_PROVIDER = get_llm_provider()
+USE_MOCK_LLM = not LLM_PROVIDER.is_available
 
 def init_rag_system():
     """Load indices and models into memory."""
@@ -174,12 +161,13 @@ def search_context(query, k=5):
 
 def translate_text(text, dest_lang="en"):
     """Translate text using deep-translator with robust fallback."""
-    if not HAS_TRANSLATOR or (dest_lang == "en" and text.isascii()):
+    if not text or not HAS_TRANSLATOR or dest_lang == "en":
         return text
-        
+
     try:
-        # deep-translator works directly over HTTP
         translated = GoogleTranslator(source='auto', target=dest_lang).translate(text)
+        if not translated or "Error 500" in translated or "That’s an error" in translated or "Server Error" in translated:
+            return text
         return translated
     except Exception as e:
         print(f"Translation failed ({dest_lang}): {e}")
@@ -268,30 +256,9 @@ Follow-up: {question}
 Standalone English Query:"""
 
     try:
-        # Try new google.genai SDK first
-        try:
-            from google import genai as new_genai
-            client = new_genai.Client(api_key=GEMINI_API_KEY)
-            response = client.models.generate_content(
-                model='gemini-2.0-flash',
-                contents=prompt,
-                config=new_genai.types.GenerateContentConfig(temperature=0.1)
-            )
-            rewritten = response.text.strip()
-        except (ImportError, AttributeError):
-            # Fallback to old google.generativeai SDK
-            import google.generativeai as genai
-            genai.configure(api_key=GEMINI_API_KEY)
-            model_gemini = genai.GenerativeModel('gemini-2.0-flash')
-            response = model_gemini.generate_content(
-                prompt,
-                generation_config=genai.types.GenerationConfig(temperature=0.1)
-            )
-            rewritten = response.text.strip()
-        print(f"Gemini query rewrite: '{question}' -> '{rewritten}'")
-        return rewritten
-    except Exception as e:
-        print(f"Gemini rewrite failed: {e}. Using fallback.")
+        rewritten = await LLM_PROVIDER.generate_response(prompt, temperature=0.1)
+        return rewritten or reformulate_query_fallback(question, history)
+    except LLMProviderError:
         return reformulate_query_fallback(question, history)
 
 async def query_rag(question: str, language: str = "en", history: list = None, state: str = "") -> dict:
@@ -299,9 +266,7 @@ async def query_rag(question: str, language: str = "en", history: list = None, s
     # 1. Translate question to English for retrieval
     query_en = question
     if language != "en":
-        print(f"Translating query from {language} to en: {question}")
-        query_en = translate_text(question, dest_lang="en")
-        print(f"Translated query: {query_en}")
+        query_en = await asyncio.to_thread(translate_text, question, "en")
         
     # 1.5. Rewrite query using history to make it standalone
     if history:
@@ -309,10 +274,9 @@ async def query_rag(question: str, language: str = "en", history: list = None, s
             query_en = reformulate_query_fallback(query_en, history)
         else:
             query_en = await rewrite_query_with_gemini(query_en, history)
-        print(f"Reformulated query for RAG: {query_en}")
         
     # 2. Retrieve relevant context
-    chunks = search_context(query_en, k=5)
+    chunks = await asyncio.to_thread(search_context, query_en, 5)
     
     # 3. Create context string
     context_str = ""
@@ -352,35 +316,14 @@ Provide a direct, helpful response:"""
         answer_en = build_mock_llm_response(query_en, chunks)
     else:
         try:
-            # Try new google.genai SDK first
-            try:
-                from google import genai as new_genai
-                client = new_genai.Client(api_key=GEMINI_API_KEY)
-                response = client.models.generate_content(
-                    model='gemini-2.0-flash',
-                    contents=prompt,
-                    config=new_genai.types.GenerateContentConfig(temperature=0.2)
-                )
-                answer_en = response.text.strip()
-            except (ImportError, AttributeError):
-                # Fallback to old google.generativeai SDK
-                import google.generativeai as genai
-                genai.configure(api_key=GEMINI_API_KEY)
-                model_gemini = genai.GenerativeModel('gemini-2.0-flash')
-                response = model_gemini.generate_content(
-                    prompt,
-                    generation_config=genai.types.GenerationConfig(temperature=0.2)
-                )
-                answer_en = response.text.strip()
-        except Exception as e:
-            print(f"Gemini API call failed: {e}. Falling back to mock generator.")
+            answer_en = await LLM_PROVIDER.generate_response(prompt, temperature=0.2)
+        except LLMProviderError:
             answer_en = build_mock_llm_response(query_en, chunks)
             
     # 6. Translate response back to user language
     answer_final = answer_en
     if language != "en":
-        print(f"Translating response from en to {language}...")
-        answer_final = translate_text(answer_en, dest_lang=language)
+        answer_final = await asyncio.to_thread(translate_text, answer_en, language)
         
     return {
         "answer": answer_final,

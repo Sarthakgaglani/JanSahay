@@ -56,6 +56,9 @@ export default function Footer() {
             <p className="mt-4 text-xs text-gray-400 dark:text-gray-500 leading-relaxed">
               {t.disclaimer}
             </p>
+            <p className="mt-3 text-xs font-medium text-amber-700 dark:text-amber-300 leading-relaxed">
+              Prototype data: This demo uses synthetic data and simulated government-service responses. It is not an official government website and does not submit applications to government systems.
+            </p>
           </div>
         </div>
 

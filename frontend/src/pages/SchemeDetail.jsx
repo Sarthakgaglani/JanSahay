@@ -313,6 +313,13 @@ export default function SchemeDetail() {
         </p>
 
         <div className="mt-8 flex flex-wrap gap-3 print:hidden">
+          <Link
+            to={`/applications?scheme=${encodeURIComponent(scheme.slug || slug)}`}
+            state={{ scheme }}
+            className="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg shadow-emerald-200 dark:shadow-none transition-all duration-200"
+          >
+            Start Application with JanSahay
+          </Link>
           {scheme.application_url && (
             <a
               href={scheme.application_url}
