@@ -47,8 +47,8 @@ export default function Login() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50/50 via-white to-violet-50/50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-900/90 p-8 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 backdrop-blur-sm">
+    <div className="flex-1 flex items-center justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 bg-gradient-to-br from-indigo-50/50 via-white to-violet-50/50 dark:from-gray-950 dark:via-gray-900 dark:to-indigo-950/30">
+      <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-white dark:bg-gray-900/90 p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow-xl border border-gray-100 dark:border-gray-800 backdrop-blur-sm">
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 text-xl font-bold mb-2">
             🔐

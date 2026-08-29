@@ -45,8 +45,8 @@ function TopHeader({ setIsOpen, isOpen }) {
   return (
     <div className="relative z-30 flex justify-between items-center h-16 px-4 sm:px-6 lg:px-8 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-gray-200 dark:border-gray-800">
       {/* Brand */}
-      <Link to="/" className="flex items-center space-x-2">
-        <span className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent">
+      <Link to="/" className="flex items-center space-x-1.5 shrink-0">
+        <span className="text-xl sm:text-2xl font-extrabold bg-gradient-to-r from-indigo-600 to-violet-600 bg-clip-text text-transparent tracking-tight whitespace-nowrap">
           {t.title}
         </span>
         <span className="hidden sm:inline-block px-2 py-0.5 text-xs font-semibold text-indigo-700 bg-indigo-50 dark:bg-indigo-900/40 dark:text-indigo-300 rounded-full">
@@ -310,13 +310,16 @@ function PrimaryNavigation({ isOpen, setIsOpen }) {
       </div>
       {/* Mobile navigation (slide‑down) */}
       {isOpen && (
-        <div className="md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {links.map((l) => (
-            <Link key={l.to} to={l.to} onClick={() => setIsOpen(false)} className={`block px-3 py-2 rounded-md text-base ${isActive(l.to)}`}>
-              {l.label}
-            </Link>
-          ))}
-        </div>
+        <>
+          <div className="fixed inset-0 top-[64px] z-10 bg-black/40 backdrop-blur-sm md:hidden" onClick={() => setIsOpen(false)} />
+          <div className="relative z-20 md:hidden bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 px-3 pt-2 pb-4 space-y-1 shadow-2xl">
+            {links.map((l) => (
+              <Link key={l.to} to={l.to} onClick={() => setIsOpen(false)} className={`block px-4 py-2.5 rounded-xl text-base font-medium transition-colors ${isActive(l.to)}`}>
+                {l.label}
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </>
   );
@@ -324,6 +327,12 @@ function PrimaryNavigation({ isOpen, setIsOpen }) {
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
   return (
     <nav className="sticky top-0 z-50" aria-label="Main navigation">
       <TopHeader isOpen={isOpen} setIsOpen={setIsOpen} />
