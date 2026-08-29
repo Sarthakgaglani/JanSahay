@@ -14,27 +14,27 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_URL = os.getenv("DATABASE_URL", "sqlite:///./jansahay.db")
 
 # Detect if the configuration points to PostgreSQL
-IS_POSTGRES = DB_URL.startswith("postgresql://") or DB_URL.startswith("postgres://")
+_is_placeholder = "c123456" in DB_URL or "example" in DB_URL
+IS_POSTGRES = (_is_placeholder is False) and (DB_URL.startswith("postgresql://") or DB_URL.startswith("postgres://"))
 
 def get_connection():
-    """Retrieve connection dynamically depending on DATABASE_URL dialect."""
+    """Retrieve connection dynamically depending on DATABASE_URL dialect with fallback support."""
+    global IS_POSTGRES
     if IS_POSTGRES:
         try:
             import psycopg2
             return psycopg2.connect(DB_URL)
-        except ImportError:
-            raise ImportError(
-                "psycopg2 is not installed but a postgresql DATABASE_URL was specified. "
-                "Please run: pip install psycopg2-binary"
-            )
-    else:
-        # SQLite
-        db_path = DB_URL.replace("sqlite:///", "")
-        if not os.path.isabs(db_path):
-            db_path = os.path.join(BASE_DIR, db_path)
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        return conn
+        except Exception as exc:
+            print(f"Warning: PostgreSQL connection to {DB_URL} failed ({exc}). Falling back to SQLite for stability.")
+            IS_POSTGRES = False
+            
+    # SQLite Fallback
+    db_path = "jansahay.db"
+    if not os.path.isabs(db_path):
+        db_path = os.path.join(BASE_DIR, db_path)
+    conn = sqlite3.connect(db_path)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def get_placeholder():
     """Returns the parameter placeholder depending on connection dialect."""
