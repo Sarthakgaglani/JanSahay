@@ -6,5 +6,5 @@
     "steps": "1. Visit the official eSHRAM self-registration portal at https://register.eshram.gov.in/. 2. Enter your Aadhaar-linked active mobile number and the captcha code, then click 'Send OTP'. 3. Enter the OTP received on your mobile device to verify your identity. 4. Enter your Aadhaar card number, accept the terms and conditions, and click 'Submit'. Another OTP will be sent to your Aadhaar-registered mobile. 5. Enter the Aadhaar OTP to load your personal details automatically. 6. Fill in the remaining sections: personal details, residential address, education qualifications, monthly income, and occupation details. 7. Provide your bank account details (Account Number, IFSC, Holder Name) for Direct Benefit Transfers. 8. Review the self-declaration summary page. Click 'Submit' to generate your 12-digit UAN eSHRAM Card and download it.",
     "application_url": "https://register.eshram.gov.in/#/user/self",
     "source_url": "https://eshram.gov.in/",
-    "cleaned_at": "2026-07-21T17:41:43.303737+00:00"
+    "cleaned_at": "2026-08-31T05:33:07.085183+00:00"
 }

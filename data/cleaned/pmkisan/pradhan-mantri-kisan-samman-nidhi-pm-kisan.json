@@ -6,5 +6,5 @@
     "steps": "1. Go to the official PM-KISAN portal (https://pmkisan.gov.in/) and click on 'New Farmer Registration' under the Farmers Corner. 2. Select 'Rural Farmer Registration' or 'Urban Farmer Registration', enter your Aadhaar number, mobile number, select your state, and click 'Get OTP'. 3. Enter the received OTP and verify your identity. 4. Fill in the detailed registration form: select your District, Sub-district, Block, and Village. 5. Input your personal info (name, gender, category, bank account details, land registration ID). 6. Upload your land ownership documents (Khatauni/Jamabandi) and self-declaration. 7. Click 'Save' to submit your application. The local administration (Patwari/District Officer) will verify your land details before starting payouts.",
     "application_url": "https://pmkisan.gov.in/RegistrationFormNew.aspx",
     "source_url": "https://pmkisan.gov.in/",
-    "cleaned_at": "2026-07-21T17:41:43.315721+00:00"
+    "cleaned_at": "2026-08-31T05:33:07.086241+00:00"
 }
