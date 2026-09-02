@@ -14,6 +14,7 @@ let accessToken = localStorage.getItem('jansahay_access_token') || null;
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
+  timeout: 45000,
   headers: {
     'Content-Type': 'application/json',
   }
@@ -23,6 +24,11 @@ api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
   return config;
 });
+
+// Quiet background warmup ping to wake Render cold starts on app load
+setTimeout(() => {
+  api.get('/api/v1/health/live').catch(() => {});
+}, 100);
 
 let isRefreshing = false;
 let failedQueue = [];
@@ -43,6 +49,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
+
+    // Retry once on network error or 5xx gateway errors caused by Render cold start
+    const isNetworkOrServerGateway = !error.response || (error.response.status >= 500 && error.response.status <= 504);
+    if (isNetworkOrServerGateway && !originalRequest._networkRetry) {
+      originalRequest._networkRetry = true;
+      await new Promise((r) => setTimeout(r, 2500));
+      return api(originalRequest);
+    }
 
     const isAuthEndpoint = originalRequest.url && (
       originalRequest.url.includes('/api/v1/auth/refresh') ||
