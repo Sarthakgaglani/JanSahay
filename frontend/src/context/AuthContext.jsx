@@ -17,19 +17,28 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     let active = true;
     const storedToken = localStorage.getItem('jansahay_access_token');
+    const storedUser = localStorage.getItem('jansahay_user');
+
+    if (!storedToken && !storedUser) {
+      setReady(true);
+      return;
+    }
 
     refreshSession()
       .then((session) => {
         if (!active) return;
-        setAccessToken(session.access_token, session.user);
-        setUser(session.user);
-      })
-      .catch(() => {
-        if (!active) return;
-        if (!storedToken) {
+        if (session && session.access_token) {
+          setAccessToken(session.access_token, session.user);
+          setUser(session.user);
+        } else {
           clearAccessToken();
           setUser(null);
         }
+      })
+      .catch(() => {
+        if (!active) return;
+        clearAccessToken();
+        setUser(null);
       })
       .finally(() => active && setReady(true));
     return () => { active = false; };

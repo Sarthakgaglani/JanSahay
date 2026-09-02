@@ -16,6 +16,72 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (!originalRequest) return Promise.reject(error);
+
+    const isAuthEndpoint = originalRequest.url && (
+      originalRequest.url.includes('/api/v1/auth/refresh') ||
+      originalRequest.url.includes('/api/v1/auth/login') ||
+      originalRequest.url.includes('/api/v1/auth/signup')
+    );
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return api(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const session = await refreshSession();
+        if (session && session.access_token) {
+          setAccessToken(session.access_token, session.user);
+          processQueue(null, session.access_token);
+          originalRequest.headers.Authorization = `Bearer ${session.access_token}`;
+          return api(originalRequest);
+        } else {
+          clearAccessToken();
+          processQueue(error, null);
+          return Promise.reject(error);
+        }
+      } catch (refreshErr) {
+        clearAccessToken();
+        processQueue(refreshErr, null);
+        return Promise.reject(refreshErr);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 export const setAccessToken = (token, user = null) => {
   accessToken = token;
   if (token) {

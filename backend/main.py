@@ -40,7 +40,7 @@ app = FastAPI(
     version="1.0"
 )
 
-cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,https://jansahay.vercel.app").split(",") if origin.strip()]
+cors_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:5174,http://localhost:5175,http://127.0.0.1:5173,http://127.0.0.1:5174,http://127.0.0.1:5175,https://jansahay.vercel.app,https://jansahay-ai.netlify.app").split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,

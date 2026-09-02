@@ -20,10 +20,21 @@ from backend.security import (
 router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
 REFRESH_COOKIE = "jansahay_refresh"
 COOKIE_SECURE = str(os.getenv("COOKIE_SECURE", os.getenv("APP_ENV", "development").lower() in {"production", "prod"})).lower() == "true"
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "none" if COOKIE_SECURE else "lax")
 
 
 def _error(status_code: int, code: str, message: str):
     raise HTTPException(status_code=status_code, detail={"code": code, "message": message})
+
+
+def _clear_refresh_cookie(response: Response):
+    response.delete_cookie(
+        REFRESH_COOKIE,
+        path="/",
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        httponly=True,
+    )
 
 
 def _set_refresh_cookie(response: Response, token: str):
@@ -32,7 +43,7 @@ def _set_refresh_cookie(response: Response, token: str):
         token,
         httponly=True,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
         max_age=REFRESH_TOKEN_DAYS * 24 * 60 * 60,
         path="/",
     )
@@ -74,11 +85,12 @@ async def refresh(request: Request, response: Response, refresh_token: str | Non
         _error(401, "authentication_required", "Your session has expired. Please sign in again.")
     session = get_active_refresh_session(hash_refresh_token(refresh_token))
     if not session:
-        response.delete_cookie(REFRESH_COOKIE, path="/api/v1/auth")
+        _clear_refresh_cookie(response)
         _error(401, "invalid_session", "Your session has expired. Please sign in again.")
     user = get_user_by_id(session["user_id"])
     if not user:
         revoke_refresh_session(hash_refresh_token(refresh_token))
+        _clear_refresh_cookie(response)
         _error(401, "invalid_session", "Your session has expired. Please sign in again.")
     revoke_refresh_session(hash_refresh_token(refresh_token))
     return _session_response(response, user)
@@ -88,7 +100,7 @@ async def refresh(request: Request, response: Response, refresh_token: str | Non
 async def logout(response: Response, refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE)):
     if refresh_token:
         revoke_refresh_session(hash_refresh_token(refresh_token))
-    response.delete_cookie(REFRESH_COOKIE, path="/api/v1/auth")
+    _clear_refresh_cookie(response)
     return {"success": True, "message": "Signed out.", "data": {}}
 
 
