@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+let getApiUrl = () => {
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (!envUrl || envUrl.includes('jansahay-ct2k.onrender.com')) {
+    return 'https://jansahay-api.onrender.com';
+  }
+  return envUrl;
+};
+
+const API_URL = getApiUrl();
 let accessToken = localStorage.getItem('jansahay_access_token') || null;
 
 const api = axios.create({
