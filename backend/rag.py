@@ -23,6 +23,32 @@ metadata_chunks = []
 tfidf_index = None
 model = None
 
+# Stopwords & Domain Synonyms for search optimization
+STOPWORDS = {
+    'tell', 'me', 'about', 'the', 'schemes', 'scheme', 'related', 'to', 'a', 'an', 'in', 'of', 'for', 'is', 'are',
+    'what', 'which', 'how', 'can', 'i', 'get', 'give', 'information', 'details', 'detail', 'know', 'want', 'please',
+    'show', 'list', 'any', 'some', 'with', 'on', 'at', 'by', 'from', 'this', 'that', 'these', 'those', 'there', 'who'
+}
+
+DOMAIN_SYNONYMS = {
+    'farmer': ['farmer', 'kisan', 'agriculture', 'fasal', 'farming', 'farm', 'crop'],
+    'farmers': ['farmer', 'kisan', 'agriculture', 'fasal', 'farming', 'farm', 'crop'],
+    'farming': ['farmer', 'kisan', 'agriculture', 'fasal', 'farming', 'farm', 'crop'],
+    'kisan': ['farmer', 'kisan', 'agriculture', 'fasal', 'farming', 'farm', 'crop'],
+    'student': ['student', 'scholarship', 'education', 'matric', 'vidyalaxmi', 'college', 'school'],
+    'students': ['student', 'scholarship', 'education', 'matric', 'vidyalaxmi', 'college', 'school'],
+    'scholarship': ['student', 'scholarship', 'education', 'matric', 'vidyalaxmi', 'minority'],
+    'scholarships': ['student', 'scholarship', 'education', 'matric', 'vidyalaxmi', 'minority'],
+    'pension': ['pension', 'atal', 'apy', 'senior', 'elderly', 'old age'],
+    'health': ['health', 'ayushman', 'pmjay', 'hospital', 'insurance', 'medical', 'bima'],
+    'loan': ['loan', 'mudra', 'svanidhi', 'credit', 'business', 'vendor'],
+    'loans': ['loan', 'mudra', 'svanidhi', 'credit', 'business', 'vendor'],
+    'vendor': ['svanidhi', 'street vendor', 'loan', 'vendor', 'business'],
+    'vendors': ['svanidhi', 'street vendor', 'loan', 'vendor', 'business'],
+    'house': ['awas', 'housing', 'home', 'shelter', 'pmay'],
+    'housing': ['awas', 'housing', 'home', 'shelter', 'pmay'],
+}
+
 # Initialize Translation library
 try:
     from deep_translator import GoogleTranslator
@@ -31,15 +57,14 @@ except ImportError:
     HAS_TRANSLATOR = False
     print("deep-translator not installed. Translation features will be mocked.")
 
-# The provider is intentionally configured only through environment variables.
 LLM_PROVIDER = get_llm_provider()
 USE_MOCK_LLM = not LLM_PROVIDER.is_available
+
 
 def init_rag_system():
     """Load indices and models into memory."""
     global faiss_index, metadata_chunks, tfidf_index, model
     
-    # 1. Load metadata chunks
     if os.path.exists(METADATA_FILE):
         with open(METADATA_FILE, 'r', encoding='utf-8') as f:
             metadata_chunks = json.load(f)
@@ -47,7 +72,6 @@ def init_rag_system():
     else:
         print(f"Warning: Metadata file not found at {METADATA_FILE}")
         
-    # 2. Try loading FAISS / ML packages
     try:
         from sentence_transformers import SentenceTransformer
         import faiss
@@ -61,89 +85,33 @@ def init_rag_system():
             print("FAISS index loaded successfully.")
             return
     except Exception as e:
-        print(f"Failed to load ML search index: {e}. Falling back to TF-IDF.")
+        print(f"Failed to load ML search index: {e}. Falling back to TF-IDF & Keyword Search.")
         
-    # 3. Fallback to TF-IDF
     if os.path.exists(TFIDF_INDEX_FILE):
         with open(TFIDF_INDEX_FILE, 'r', encoding='utf-8') as f:
             tfidf_index = json.load(f)
         print("TF-IDF fallback index loaded successfully.")
-    else:
-        print("Warning: No index files found. Queries will run without context.")
+
 
 def clean_and_tokenize(text):
-    text = text.lower()
-    words = [re.sub(r'[^\w\s]', '', w) for w in text.split()]
-    return [w for w in words if w]
+    """Clean text, remove stopwords, and expand domain synonyms."""
+    words = [re.sub(r'[^\w\s]', '', w.lower()) for w in text.split()]
+    tokens = [w for w in words if w and w not in STOPWORDS]
+    expanded = set(tokens)
+    for t in tokens:
+        if t in DOMAIN_SYNONYMS:
+            expanded.update(DOMAIN_SYNONYMS[t])
+    return list(expanded)
 
-def tfidf_search_query(query, k=5):
-    """Fallback search using pure Python TF-IDF cosine similarity."""
-    global tfidf_index, metadata_chunks
-    if not tfidf_index or not metadata_chunks:
-        return []
-        
-    query_tokens = clean_and_tokenize(query)
-    if not query_tokens:
-        return []
-        
-    vocab = tfidf_index["vocab"]
-    idf = tfidf_index["idf"]
-    vectors = tfidf_index["vectors"]
-    vocab_idx = {word: i for i, word in enumerate(vocab)}
-    
-    # Compute query TF-IDF vector
-    query_tf = {}
-    for word in query_tokens:
-        query_tf[word] = query_tf.get(word, 0) + 1
-        
-    query_vector = {}
-    query_norm = 0
-    for word, freq in query_tf.items():
-        if word in vocab_idx:
-            idx_str = str(vocab_idx[word])
-            val = (freq / len(query_tokens)) * idf.get(word, 1.0)
-            query_vector[idx_str] = val
-            query_norm += val * val
-    query_norm = math.sqrt(query_norm)
-    
-    if query_norm == 0:
-        # If no terms match vocabulary, return first k as fallback
-        return metadata_chunks[:k]
-        
-    # Compute cosine similarity for each document vector
-    scores = []
-    for doc_idx, doc_vector in enumerate(vectors):
-        dot_product = 0
-        doc_norm = 0
-        
-        # Doc norm
-        for idx_str, val in doc_vector.items():
-            doc_norm += val * val
-            if idx_str in query_vector:
-                dot_product += val * query_vector[idx_str]
-                
-        doc_norm = math.sqrt(doc_norm)
-        if doc_norm == 0:
-            score = 0
-        else:
-            score = dot_product / (query_norm * doc_norm)
-            
-        scores.append((doc_idx, score))
-        
-    # Sort and return top k chunks
-    scores.sort(key=lambda x: x[1], reverse=True)
-    top_indices = [idx for idx, score in scores[:k] if score > 0]
-    
-    # If no matches, fallback to first k
-    if not top_indices:
-        return metadata_chunks[:k]
-        
-    return [metadata_chunks[i] for i in top_indices]
 
 def search_context(query, k=5):
-    """Retrieve top k matching chunks for query."""
+    """Retrieve top k matching chunks for query with keyword boosting & title scoring."""
     global faiss_index, model, metadata_chunks
     
+    if not metadata_chunks:
+        return []
+
+    # 1. Try FAISS if available
     if faiss_index is not None and model is not None:
         try:
             import numpy as np
@@ -153,11 +121,38 @@ def search_context(query, k=5):
             for idx in indices[0]:
                 if idx < len(metadata_chunks) and idx >= 0:
                     results.append(metadata_chunks[idx])
-            return results
+            if results:
+                return results
         except Exception as e:
-            print(f"FAISS search failed: {e}. Trying TF-IDF fallback...")
-            
-    return tfidf_search_query(query, k)
+            print(f"FAISS search failed: {e}. Falling back to Keyword search...")
+
+    # 2. Enhanced Keyword & Relevance Search
+    query_tokens = clean_and_tokenize(query)
+    if not query_tokens:
+        return metadata_chunks[:k]
+        
+    scores = []
+    for idx, chunk in enumerate(metadata_chunks):
+        scheme_name = (chunk.get('scheme_name') or '').lower()
+        chunk_text = (chunk.get('text') or '').lower()
+        
+        score = 0
+        for token in query_tokens:
+            if token in scheme_name:
+                score += 5.0
+            if token in chunk_text:
+                score += 1.5 + chunk_text.count(token) * 0.5
+                
+        scores.append((idx, score))
+        
+    scores.sort(key=lambda x: x[1], reverse=True)
+    top_indices = [idx for idx, s in scores[:k] if s > 0]
+    
+    if not top_indices:
+        return metadata_chunks[:k]
+        
+    return [metadata_chunks[i] for i in top_indices]
+
 
 def translate_text(text, dest_lang="en"):
     """Translate text using deep-translator with robust fallback."""
@@ -173,38 +168,36 @@ def translate_text(text, dest_lang="en"):
         print(f"Translation failed ({dest_lang}): {e}")
         return text
 
+
 def build_mock_llm_response(question, chunks):
-    """Simulates Gemini LLM response using retrieved context chunks."""
+    """Simulates or formats response using retrieved context chunks."""
     if not chunks:
-        return "I could not find this information. Please visit the official portal."
+        return "JanSahay AI provides guidance on Indian Government Schemes including PM Kisan, Ayushman Bharat, Scholarships, and APY. Please try asking about a specific scheme or category!"
         
-    # Match the best chunk to construct answer
     best_chunk = chunks[0]
-    scheme_name = best_chunk.get("scheme_name", "Scheme")
-    section = best_chunk.get("section", "Description")
-    raw_text = best_chunk.get("raw_text", "")
+    scheme_name = best_chunk.get("scheme_name", "Government Scheme")
     
-    # Generate structured answer based on question type
-    q = question.lower()
-    if "exclusion" in q or "exclude" in q or "not eligible" in q:
-        # Find eligibility chunk (which usually contains exclusions)
-        elig_chunks = [c for c in chunks if c["section"] == "Eligibility"]
-        chunk_to_use = elig_chunks[0] if elig_chunks else best_chunk
-        return f"Regarding **{scheme_name}** exclusions:\n\n{chunk_to_use.get('raw_text', '')}\n\nPlease check the official portal for full exclusion parameters: {chunk_to_use.get('source_url', '')}."
-    elif "eligibility" in q or "qualify" in q or "who can" in q:
-        # Find eligibility chunk if possible
-        elig_chunks = [c for c in chunks if c["section"] == "Eligibility"]
-        chunk_to_use = elig_chunks[0] if elig_chunks else best_chunk
-        return f"Regarding **{scheme_name}** eligibility: \n\n{chunk_to_use.get('raw_text', '')}\n\nPlease verify details on the official portal: {chunk_to_use.get('source_url', '')}."
-    elif "document" in q or "what do i need" in q or "papers" in q:
-        doc_chunks = [c for c in chunks if c["section"] == "Documents"]
-        chunk_to_use = doc_chunks[0] if doc_chunks else best_chunk
-        return f"To apply for **{scheme_name}**, the required documents are: \n\n{chunk_to_use.get('raw_text', '')}\n\nPlease check the official portal for guidelines: {chunk_to_use.get('source_url', '')}."
-    else:
-        # General question response
-        desc_chunks = [c for c in chunks if c["section"] == "Description"]
-        chunk_to_use = desc_chunks[0] if desc_chunks else best_chunk
-        return f"Here is the details for **{scheme_name}**:\n\n{chunk_to_use.get('raw_text', '')}\n\nOfficial Apply Link: {chunk_to_use.get('application_url', '')}."
+    # Collect all relevant chunks for this scheme
+    scheme_chunks = [c for c in chunks if c.get("scheme_name") == scheme_name]
+    if not scheme_chunks:
+        scheme_chunks = chunks[:3]
+        
+    desc = next((c.get("raw_text") for c in scheme_chunks if c.get("section") == "Description"), best_chunk.get("raw_text", ""))
+    elig = next((c.get("raw_text") for c in scheme_chunks if c.get("section") == "Eligibility"), None)
+    docs = next((c.get("raw_text") for c in scheme_chunks if c.get("section") == "Documents"), None)
+    steps = next((c.get("raw_text") for c in scheme_chunks if c.get("section") == "Steps"), None)
+    
+    response = f"### **{scheme_name}**\n\n{desc}\n\n"
+    if elig:
+        response += f"#### **Eligibility Criteria:**\n{elig}\n\n"
+    if docs:
+        response += f"#### **Required Documents:**\n{docs}\n\n"
+    if steps:
+        response += f"#### **Application Steps:**\n{steps}\n\n"
+        
+    response += f"📌 **Official Portal:** [{best_chunk.get('source_url', 'https://myscheme.gov.in')}]({best_chunk.get('source_url', 'https://myscheme.gov.in')})"
+    return response
+
 
 def reformulate_query_fallback(question: str, history: list) -> str:
     """Fallback query reformulation based on rules."""
@@ -215,39 +208,36 @@ def reformulate_query_fallback(question: str, history: list) -> str:
     if not needs_context or not history:
         return question
         
-    # Find the last scheme name mentioned by the assistant
     last_scheme = None
     for msg in reversed(history):
-        # Handle pydantic object vs dict compatibility
         msg_sender = getattr(msg, "sender", None) or msg.get("sender", "")
         msg_text = getattr(msg, "text", None) or msg.get("text", "")
         
         if msg_sender == "assistant":
-            # Search for scheme names in **double asterisks** or common names
             match = re.search(r'\*\*([^*]+)\*\*', msg_text)
             if match:
                 last_scheme = match.group(1)
                 break
                 
     if last_scheme:
-        # Append the scheme name to make the search contextual
         return f"{question} ({last_scheme})"
         
     return question
 
+
 async def rewrite_query_with_gemini(question: str, history: list) -> str:
-    """Rewrite follow-up question using Gemini to be standalone and self-contained."""
+    """Rewrite follow-up question using Gemini to be standalone."""
     if not history:
         return question
         
     history_str = ""
-    for m in history[-5:]:  # Take the last 5 turns to keep it fast
+    for m in history[-5:]:
         msg_sender = getattr(m, "sender", None) or m.get("sender", "")
         msg_text = getattr(m, "text", None) or m.get("text", "")
         history_str += f"{msg_sender.capitalize()}: {msg_text}\n"
         
-    prompt = f"""You are a query rewriting assistant. Given the chat history and a follow-up question, rewrite the follow-up question to be a self-contained, standalone search query in English that has all the necessary context from the history.
-Do NOT answer the question. Just return the rewritten question text.
+    prompt = f"""You are a query rewriting assistant. Given the chat history and a follow-up question, rewrite the follow-up question to be a self-contained, standalone search query in English.
+Do NOT answer the question. Just return the rewritten query text.
 
 History:
 {history_str}
@@ -261,24 +251,21 @@ Standalone English Query:"""
     except LLMProviderError:
         return reformulate_query_fallback(question, history)
 
+
 async def query_rag(question: str, language: str = "en", history: list = None, state: str = "") -> dict:
     """Core RAG pipeline: Translation, Retrieval, LLM query, and formatting."""
-    # 1. Translate question to English for retrieval
     query_en = question
     if language != "en":
         query_en = await asyncio.to_thread(translate_text, question, "en")
         
-    # 1.5. Rewrite query using history to make it standalone
     if history:
         if USE_MOCK_LLM:
             query_en = reformulate_query_fallback(query_en, history)
         else:
             query_en = await rewrite_query_with_gemini(query_en, history)
         
-    # 2. Retrieve relevant context
     chunks = await asyncio.to_thread(search_context, query_en, 5)
     
-    # 3. Create context string
     context_str = ""
     sources = []
     seen_urls = set()
@@ -296,31 +283,33 @@ async def query_rag(question: str, language: str = "en", history: list = None, s
                 "apply_url": c.get("application_url")
             })
             
-    # 4. Prompt building
-    state_context = f"\nUser's State/Location: {state}. Prioritize state-specific information and schemes where applicable." if state else ""
-    prompt = f"""You are JanSahay AI, a helpful public assistant for Indian government schemes.
-Answer the user's question clearly, politely, and factual, based ONLY on the provided context.
-If the context does not have the answer or is not relevant, say: "I could not find this information in the database. Please check the official portal."
-Always keep the answers clear and simple, structured in bullet points where appropriate.{state_context}
+    prompt = f"""You are JanSahay AI, a highly intelligent, empathetic, and knowledgeable assistant for Indian government schemes.
+Your goal is to provide helpful, clear, and well-structured answers to citizens looking for government scheme information.
 
-Context:
+Context from Database:
 {context_str}
 
-Question:
-{query_en}
+User Location/State: {state if state else "India"}
+User Question: {query_en}
 
-Provide a direct, helpful response:"""
+Instructions:
+1. Provide a comprehensive, clear, and well-structured response using markdown (bold titles, bullet points for eligibility, key benefits, and required documents).
+2. If the user asks general questions or greetings (e.g., "Hello", "How does JanSahay work?"), answer warmly as JanSahay AI.
+3. If the context contains details about a matching scheme, synthesize and present it clearly. If the exact answer is missing from the provided context chunks, use your comprehensive knowledge of Indian government schemes to provide accurate information and guide the user to official portals like https://myscheme.gov.in.
+4. Never reply with robotic refusal messages like "I could not find this information". Always be helpful and informative!
 
-    # 5. Get Answer (Gemini or Mock)
+Provide a direct, friendly response:"""
+
     if USE_MOCK_LLM:
         answer_en = build_mock_llm_response(query_en, chunks)
     else:
         try:
-            answer_en = await LLM_PROVIDER.generate_response(prompt, temperature=0.2)
+            answer_en = await LLM_PROVIDER.generate_response(prompt, temperature=0.3)
+            if not answer_en or "I could not find" in answer_en:
+                answer_en = build_mock_llm_response(query_en, chunks)
         except LLMProviderError:
             answer_en = build_mock_llm_response(query_en, chunks)
             
-    # 6. Translate response back to user language
     answer_final = answer_en
     if language != "en":
         answer_final = await asyncio.to_thread(translate_text, answer_en, language)
